@@ -37,6 +37,6 @@ out/
 .vscode/
 
 # 설정 파일 제외
-.properties
-.yml
-.yaml
+*.properties
+*.yml
+*.yaml
