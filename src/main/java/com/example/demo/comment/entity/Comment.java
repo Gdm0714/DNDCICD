@@ -1,8 +1,7 @@
 package com.example.demo.comment.entity;
 
 import jakarta.persistence.*;
-import lombok.AccessLevel;
-import lombok.Builder;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
@@ -16,28 +15,30 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "comments")
+@Table(name = "comment")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor
+@AllArgsConstructor
 @EntityListeners(AuditingEntityListener.class)
 public class Comment {
 
     @Id
+    @Column(name = "commentRowId")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, columnDefinition = "TEXT")
+    @Column(name = "content", nullable = false, columnDefinition = "TEXT")
     private String content;
 
-    @Column(nullable = false, length = 50)
-    private String author;
+    @Column(name = "memberRowId", nullable = false)
+    private Long memberRowId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "post_id", nullable = false)
-    private Post post;
+    @JoinColumn(name = "postRowId", nullable = false)
+    private Post postEntity;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "parent_id")
+    @JoinColumn(name = "parentRowId")
     private Comment parent;
 
     @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -51,22 +52,21 @@ public class Comment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @Builder
-    public Comment(String content, String author, Post post, Comment parent) {
-        this.content = content;
-        this.author = author;
-        this.post = post;
-        this.parent = parent;
+    public static Comment of(String content, Long memberRowId, Post post, Comment parent) {
+        return new Comment(null, content, memberRowId, post, parent, new ArrayList<>(), null, null);
     }
 
+    // 댓글 수정
     public void update(String content) {
         this.content = content;
     }
 
+    // 대댓글인지 확인
     public boolean isReply() {
         return this.parent != null;
     }
 
+    // 자식 댓글 개수
     public int getChildrenCount() {
         return this.children.size();
     }
