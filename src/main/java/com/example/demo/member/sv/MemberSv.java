@@ -3,6 +3,7 @@ package com.example.demo.member.sv;
 import com.example.demo.member.ctrl.req.AdminKey;
 import com.example.demo.member.dao.MemberRepository;
 import com.example.demo.member.dao.entity.MemberEntity;
+import com.example.demo.member.exception.AdminException;
 import com.example.demo.member.kakao.KakaoUserInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,8 +19,10 @@ public class MemberSv {
 
     private final MemberRepository memberRepository;
 
+    private final KakaoSv kakaoSv;
+
     public Long registerMember(String accessToken) {
-        KakaoUserInfo kakaoUserInfo = memberRepository.getKakaoUserInfo(accessToken);
+        KakaoUserInfo kakaoUserInfo = kakaoSv.getKakaoUserInfo(accessToken);
         if(idVertifiedUser(kakaoUserInfo)) return 0L;
         if(memberRepository.findByNickname(kakaoUserInfo.kakaoAccount.profile.getNickname()).isPresent()) return 0L;
 
@@ -27,21 +30,21 @@ public class MemberSv {
     }
 
     public Long login(String accessToken) {
-        KakaoUserInfo kakaoUserInfo = memberRepository.getKakaoUserInfo(accessToken);
+        KakaoUserInfo kakaoUserInfo = kakaoSv.getKakaoUserInfo(accessToken);
         if(idVertifiedUser(kakaoUserInfo)) return 0L;
         MemberEntity memberEntity = memberRepository.findByIdToken(kakaoUserInfo.getIdToken()).orElseThrow(IllegalAccessError::new);
         return memberEntity.getId();
     }
 
     public String getAccessToken(String idCode) {
-        String accessToken = memberRepository.getKakaoAccessToken(idCode);
+        String accessToken = kakaoSv.getKakaoAccessToken(idCode);
         log.warn("accessToken : {}", accessToken);
         return accessToken;
     }
 
     public void deleteMemberByMemberId(Long memberRowId, AdminKey adminKey) {
         if (this.adminKey.equals(adminKey.getAdminKey())) memberRepository.deleteMemberByMemberId(memberRowId);
-        else log.error("어드민 키가 올바르지 않습니다. 입력된 adminKey : {}", adminKey.getAdminKey());
+        else throw new AdminException.ADMINKEY_UNAUTHORIZED();
     }
 
     private Boolean idVertifiedUser(KakaoUserInfo kakaoUserInfo) {
