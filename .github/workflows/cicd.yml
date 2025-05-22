@@ -47,9 +47,6 @@ jobs:
           ./gradlew clean build -x test
           echo "Build completed. Checking output:"
           ls -la build/libs/
-          
-      - name: Check JAR
-        run: ls -lh build/libs
 
       - name: Copy JAR to server
         run: |
@@ -98,23 +95,6 @@ jobs:
             # 8088 포트 사용 중인 프로세스 종료
             lsof -ti:8088 | xargs kill -9 2>/dev/null || true
           "
-          
-      - name: Debug JAR file
-        run: |
-          ssh -i ~/.ssh/private_key.pem ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "
-            cd ~/app
-            echo '=== JAR file verification ==='
-            echo 'File details:'
-            ls -la app.jar
-            echo 'File type:'
-            file app.jar
-            echo 'File size:'
-            du -h app.jar
-            echo 'File header (first 100 bytes):'
-            head -c 100 app.jar | xxd
-            echo 'Testing JAR file structure:'
-            unzip -t app.jar >/dev/null 2>&1 && echo 'JAR structure: OK' || echo 'JAR structure: CORRUPTED'
-          "
       
       - name: Deploy and run application
         uses: appleboy/ssh-action@master
@@ -127,7 +107,6 @@ jobs:
             export SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}"
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export SERVER_PORT=8088
             
             cd ~/app
             nohup java -jar app.jar > logs/app.log 2>&1 &
