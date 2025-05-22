@@ -47,6 +47,9 @@ jobs:
           ./gradlew clean build -x test
           echo "Build completed. Checking output:"
           ls -la build/libs/
+          
+      - name: Check JAR
+        run: ls -lh build/libs
 
       - name: Copy JAR to server
         run: |
@@ -121,3 +124,5 @@ jobs:
               tail -n 50 logs/app.log
               exit 1
             fi
+
+
