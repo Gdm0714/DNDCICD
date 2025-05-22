@@ -1,8 +1,10 @@
 package com.example.demo.member.sv;
 
+import com.example.demo.member.exception.KakaoException;
 import com.example.demo.member.kakao.KakaoTokenInfo;
 import com.example.demo.member.kakao.KakaoUserInfo;
 import io.netty.handler.codec.http.HttpHeaderValues;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
@@ -10,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Service
 public class KakaoSv {
     private final String BEARER = "Bearer";
@@ -37,10 +40,10 @@ public class KakaoSv {
                         .retrieve()
                         .onStatus(
                                 HttpStatusCode::is4xxClientError,
-                                clientResponse -> Mono.error(new IllegalAccessException("카카오 엑세스 토큰이 올바르지 않습니다.")))
+                                clientResponse -> Mono.error(new KakaoException.INCORRECT_ACCESSTOKEN()))
                         .onStatus(
                                 HttpStatusCode::is5xxServerError,
-                                clientResponse -> Mono.error(new IllegalAccessException("카카오 서버 오류입니다.")))
+                                clientResponse -> Mono.error(new KakaoException.KAKAO_SERVER_ERROR()))
                         .bodyToMono(KakaoUserInfo.class)
                         .block();
 
@@ -50,6 +53,7 @@ public class KakaoSv {
     public String getKakaoAccessToken(String authorizationCode) {
         log.warn("KAKAO_CLIENT_ID : {}", KAKAO_CLIENT_ID);
         log.warn("KAKAO_REDIRECT_URL : {}", KAKAO_REDIRECT_URL);
+        log.warn("authorizationCode : {}", authorizationCode);
         KakaoTokenInfo kakaoTokenInfo =
                 WebClient.create("https://kauth.kakao.com")
                         .post()
@@ -70,13 +74,14 @@ public class KakaoSv {
                         .onStatus(
                                 HttpStatusCode::is4xxClientError,
                                 clientResponse ->
-                                        Mono.error(new RuntimeException("카카오 idCode 값이 유효하지 않습니다.")))
+                                        Mono.error(new KakaoException.INCORRECT_ID_CODE()))
                         .onStatus(
                                 HttpStatusCode::is5xxServerError,
                                 clientResponse ->
-                                        Mono.error(new RuntimeException("카카오 서버 오류입니다.")))
+                                        Mono.error(new KakaoException.KAKAO_SERVER_ERROR()))
                         .bodyToMono(KakaoTokenInfo.class)
                         .block();
+        log.warn("kakaoTokenInfo : {}", kakaoTokenInfo);
         return kakaoTokenInfo.getAccessToken();
     }
 }
