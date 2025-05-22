@@ -102,12 +102,12 @@ jobs:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 8080
+          port: ${{ secrets.SERVER_PORT }}
           script: |
             export SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}"
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            
+            export SERVER_PORT=8088 
             cd ~/app
             nohup java -jar app.jar > logs/app.log 2>&1 &
             echo $! > app.pid
