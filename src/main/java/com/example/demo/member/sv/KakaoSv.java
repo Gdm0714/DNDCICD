@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -52,34 +53,48 @@ public class KakaoSv {
     }
 
     public String getKakaoAccessToken(String authorizationCode) {
-        log.warn("KAKAO_CLIENT_ID : {}", KAKAO_CLIENT_ID);
-        log.warn("KAKAO_REDIRECT_URL : {}", KAKAO_REDIRECT_URL);
-        log.warn("authorizationCode : {}", authorizationCode);
-        KakaoTokenInfo kakaoTokenInfo =
-                WebClient.create("https://kauth.kakao.com")
-                        .post()
-                        .uri("/oauth/token")
-                        .header(
-                                HttpHeaders.CONTENT_TYPE,
-                                HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
-                        .body(
-                                BodyInserters.fromFormData("grant_type", "authorization_code")
-                                        .with("client_id", KAKAO_CLIENT_ID)
-                                        .with("redirect_uri", KAKAO_REDIRECT_URL)
-                                        .with("code", authorizationCode)
-                        )
-                        .retrieve()
-                        .onStatus(
-                                HttpStatusCode::is4xxClientError,
-                                clientResponse ->
-                                        Mono.error(new KakaoException.INCORRECT_ID_CODE()))
-                        .onStatus(
-                                HttpStatusCode::is5xxServerError,
-                                clientResponse ->
-                                        Mono.error(new KakaoException.KAKAO_SERVER_ERROR()))
-                        .bodyToMono(KakaoTokenInfo.class)
-                        .block();
-        log.warn("kakaoTokenInfo : {}", kakaoTokenInfo);
-        return kakaoTokenInfo.getAccessToken();
+        try {
+
+            KakaoTokenInfo kakaoTokenInfo =
+                    WebClient.create("https://kauth.kakao.com")
+                            .post()
+                            .uri("/oauth/token")
+                            .header(
+                                    HttpHeaders.CONTENT_TYPE,
+                                    HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
+                            .body(
+                                    BodyInserters.fromFormData("grant_type", "authorization_code")
+                                            .with("client_id", KAKAO_CLIENT_ID)
+                                            .with("redirect_uri", KAKAO_REDIRECT_URL)
+                                            .with("code", authorizationCode)
+                            )
+                            .retrieve()
+                            .onStatus(
+                                    HttpStatusCode::is4xxClientError,
+                                    clientResponse ->
+                                            Mono.error(new KakaoException.INCORRECT_ID_CODE()))
+                            .onStatus(
+                                    HttpStatusCode::is5xxServerError,
+                                    clientResponse ->
+                                            Mono.error(new KakaoException.KAKAO_SERVER_ERROR()))
+                            .bodyToMono(KakaoTokenInfo.class)
+                            .block();
+            return kakaoTokenInfo.getAccessToken();
+
+        } catch (Exception e) {
+            log.warn("카카오 서버 오류입니다. {}", e.getMessage());
+            String errorMessage = e.getMessage();
+            if(errorMessage.contains("카카오 idCode 값이 유효하지 않습니다.")) {
+                throw new KakaoException.INCORRECT_ID_CODE();
+            } else if (errorMessage.contains("카카오 서버 오류입니다.")) {
+                throw new KakaoException.KAKAO_SERVER_ERROR();
+            } else if (errorMessage.contains("카카오 엑세스 토큰이 올바르지 않습니다.")) {
+                throw new KakaoException.KAKAO_SERVER_ERROR();
+            } else if (errorMessage.contains("요청한 카카오 유저가 존재하지 않습니다.")) {
+                throw new KakaoException.KAKAO_SERVER_ERROR();
+            }
+        }
+
+        throw new KakaoException.KAKAO_SERVER_ERROR();
     }
 }

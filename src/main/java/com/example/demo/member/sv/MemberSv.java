@@ -39,7 +39,6 @@ public class MemberSv {
 
     public String getAccessToken(String idCode) {
         String accessToken = kakaoSv.getKakaoAccessToken(idCode);
-        log.warn("accessToken : {}", accessToken);
         return accessToken;
     }
 
