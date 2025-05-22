@@ -26,7 +26,10 @@ jobs:
         run: chmod +x ./gradlew
       
       - name: Build with Gradle
-        run: ./gradlew clean build -x test
+        run: |
+          ./gradlew clean build -x test
+          echo "Build completed. Checking output:"
+          ls -la build/libs/
       
       - name: Setup SSH private key
         run: |
@@ -42,11 +45,7 @@ jobs:
             mkdir -p ~/app/logs
           "
       
-      - name: Build with Gradle
-        run: |
-          ./gradlew clean build -x test
-          echo "Build completed. Checking output:"
-          ls -la build/libs/
+
 
       - name: Copy JAR to server
         run: |
@@ -125,6 +124,10 @@ jobs:
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export SERVER_PORT=8088 
+
+            export KAKAO_KAKAO_CLIENT_ID='${{ secrets.KAKAO_CLIENT_ID }}'
+            export KAKAO_KAKAO_REDIRECT_URL='${{ secrets.KAKAO_REDIRECT_URL }}'
+            
             cd ~/app
             nohup java -jar app.jar > logs/app.log 2>&1 &
             echo $! > app.pid
