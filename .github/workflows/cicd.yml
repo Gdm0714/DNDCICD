@@ -42,14 +42,35 @@ jobs:
             mkdir -p ~/app/logs
           "
       
+      - name: Build with Gradle
+        run: |
+          ./gradlew clean build -x test
+          echo "Build completed. Checking output:"
+          ls -la build/libs/
+
       - name: Copy JAR to server
         run: |
+          JAR_FILE=$(find build/libs -name "*.jar" -not -name "*-plain.jar" | head -1)
+          if [ -z "$JAR_FILE" ]; then
+            echo "No JAR file found!"
+            exit 1
+          fi
+          echo "Found JAR file: $JAR_FILE"
+    
           ssh -i ~/.ssh/private_key.pem ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "
             if [ -f ~/app/app.jar ]; then 
               cp ~/app/app.jar ~/app/backups/app_$(date +%Y%m%d_%H%M%S).jar
             fi
           "
-          scp -i ~/.ssh/private_key.pem build/libs/*.jar ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/app/app.jar
+    
+          scp -i ~/.ssh/private_key.pem "$JAR_FILE" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/app/app.jar
+    
+          ssh -i ~/.ssh/private_key.pem ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "
+            cd ~/app
+            echo 'Verifying uploaded JAR file:'
+            ls -la app.jar
+            file app.jar
+          "
       
       - name: Stop running application
         run: |
