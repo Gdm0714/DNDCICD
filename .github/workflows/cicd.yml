@@ -81,8 +81,6 @@ jobs:
             export SPRING_DATASOURCE_URL="${{ secrets.DB_URL }}"
             export SPRING_DATASOURCE_USERNAME="${{ secrets.DB_USERNAME }}"
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
-            export SPRING_DATA_REDIS_HOST="${{ secrets.REDIS_HOST }}"
-            export SPRING_DATA_REDIS_PORT="${{ secrets.REDIS_PORT }}"
             
             cd ~/app
             nohup java -jar app.jar > logs/app.log 2>&1 &
