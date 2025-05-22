@@ -125,6 +125,8 @@ jobs:
             export SPRING_DATASOURCE_PASSWORD="${{ secrets.DB_PASSWORD }}"
             export SERVER_PORT=8088 
 
+            export ADMIN_KEY='${{ secrets.ADMIN_KEY }}'
+
             export KAKAO_KAKAO_CLIENT_ID='${{ secrets.KAKAO_CLIENT_ID }}'
             export KAKAO_KAKAO_REDIRECT_URL='${{ secrets.KAKAO_REDIRECT_URL }}'
             
