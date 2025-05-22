@@ -1,5 +1,6 @@
 package com.example.demo.member.ctrl;
 
+import com.example.demo.member.ctrl.req.AdminKey;
 import com.example.demo.member.ctrl.req.RegisterReq;
 import com.example.demo.member.ctrl.res.MemberRowIdRes;
 import com.example.demo.member.sv.MemberSv;
@@ -8,6 +9,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -52,5 +54,19 @@ public class MemberCtrl {
             String idCode) {
         return memberSv.getAccessToken(idCode);
     }
+
+    @DeleteMapping("/v1/{memberRowId}")
+    @ResponseStatus(HttpStatus.OK)
+    @Operation(summary = "(Admin)회원 탈퇴를 위한 API")
+    public void unjoin(
+            @PathVariable("memberRowId")
+            @Parameter(name = "memberRowId", description = "사용자 식별 번호", required = true)
+            Long memberRowId,
+            @RequestBody
+            AdminKey adminKey
+    ) {
+        memberSv.deleteMemberByMemberId(memberRowId, adminKey);
+    }
+
 
 }

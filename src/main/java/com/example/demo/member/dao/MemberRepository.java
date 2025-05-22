@@ -41,6 +41,10 @@ public class MemberRepository {
         return memberJpaRepository.findByNickname(nickname);
     }
 
+    public void deleteMemberByMemberId(Long memberId) {
+        memberJpaRepository.deleteById(memberId);
+    }
+
     public KakaoUserInfo getKakaoUserInfo(String accessToken) {
         KakaoUserInfo userInfo =
                 WebClient.create("https://kapi.kakao.com")
