@@ -4,6 +4,7 @@ import com.example.demo.member.ctrl.req.AdminKey;
 import com.example.demo.member.dao.MemberRepository;
 import com.example.demo.member.dao.entity.MemberEntity;
 import com.example.demo.member.exception.AdminException;
+import com.example.demo.member.exception.KakaoException;
 import com.example.demo.member.kakao.KakaoUserInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,7 +24,7 @@ public class MemberSv {
 
     public Long registerMember(String accessToken) {
         KakaoUserInfo kakaoUserInfo = kakaoSv.getKakaoUserInfo(accessToken);
-        if(idVertifiedUser(kakaoUserInfo)) return 0L;
+        if(idVertifiedUser(kakaoUserInfo)) return memberRepository.findByIdToken(kakaoUserInfo.getIdToken()).get().getId();
         if(memberRepository.findByNickname(kakaoUserInfo.kakaoAccount.profile.getNickname()).isPresent()) return 0L;
 
         return memberRepository.save(kakaoUserInfo);
@@ -48,8 +49,8 @@ public class MemberSv {
     }
 
     private Boolean idVertifiedUser(KakaoUserInfo kakaoUserInfo) {
-        if(kakaoUserInfo.getIdToken() == 0L) return false;
-        if(memberRepository.findByIdToken(kakaoUserInfo.getIdToken()).isPresent()) return false;
+        if(kakaoUserInfo.getIdToken() == 0L) throw new KakaoException.KAKAO_MEMBER_NOT_FOUND();
+        if(memberRepository.findByIdToken(kakaoUserInfo.getIdToken()).isPresent()) return true;
         return false;
     }
 

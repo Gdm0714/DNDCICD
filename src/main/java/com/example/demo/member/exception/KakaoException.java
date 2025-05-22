@@ -25,4 +25,10 @@ public class KakaoException extends BusinessException {
       super(KakaoErrorCode.INCORRECT_ACCESSTOKEN);
     }
   }
+
+  public static class KAKAO_MEMBER_NOT_FOUND extends KakaoException {
+    public KAKAO_MEMBER_NOT_FOUND() {
+      super(KakaoErrorCode.KAKAO_MEMBER_NOT_FOUND);
+    }
+  }
 }
