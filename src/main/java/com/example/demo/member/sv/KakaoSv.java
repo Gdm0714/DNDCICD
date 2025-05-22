@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
@@ -57,19 +58,16 @@ public class KakaoSv {
         KakaoTokenInfo kakaoTokenInfo =
                 WebClient.create("https://kauth.kakao.com")
                         .post()
-                        .uri(
-                                uriBuilder ->
-                                        uriBuilder
-                                                .scheme("https")
-                                                .path("/oauth/token")
-                                                .queryParam("grant_type", AUTHORIZATION_CODE)
-                                                .queryParam("client_id", KAKAO_CLIENT_ID)
-                                                .queryParam("redirect_uri", KAKAO_REDIRECT_URL)
-                                                .queryParam("code", authorizationCode)
-                                                .build(true))
+                        .uri("/oauth/token")
                         .header(
                                 HttpHeaders.CONTENT_TYPE,
                                 HttpHeaderValues.APPLICATION_X_WWW_FORM_URLENCODED.toString())
+                        .body(
+                                BodyInserters.fromFormData("grant_type", "authorization_code")
+                                        .with("client_id", KAKAO_CLIENT_ID)
+                                        .with("redirect_uri", KAKAO_REDIRECT_URL)
+                                        .with("code", authorizationCode)
+                        )
                         .retrieve()
                         .onStatus(
                                 HttpStatusCode::is4xxClientError,
