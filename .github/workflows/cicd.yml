@@ -53,24 +53,29 @@ jobs:
 
       - name: Copy JAR to server
         run: |
+          echo "Available JAR files:"
+          ls -la build/libs/
+    
           JAR_FILE=$(find build/libs -name "*.jar" -not -name "*-plain.jar" | head -1)
           if [ -z "$JAR_FILE" ]; then
-            echo "No JAR file found!"
+            echo "No executable JAR file found!"
             exit 1
           fi
-          echo "Found JAR file: $JAR_FILE"
+          echo "Selected JAR file: $JAR_FILE"
     
           ssh -i ~/.ssh/private_key.pem ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "
-            if [ -f ~/app/app.jar ]; then 
-              cp ~/app/app.jar ~/app/backups/app_$(date +%Y%m%d_%H%M%S).jar
+            cd ~/app
+            if [ -f app.jar ]; then 
+              cp app.jar backups/app_$(date +%Y%m%d_%H%M%S).jar
             fi
+            rm -rf app.jar
           "
     
           scp -i ~/.ssh/private_key.pem "$JAR_FILE" ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }}:~/app/app.jar
     
           ssh -i ~/.ssh/private_key.pem ${{ secrets.SERVER_USERNAME }}@${{ secrets.SERVER_HOST }} "
             cd ~/app
-            echo 'Verifying uploaded JAR file:'
+            echo 'File transferred successfully:'
             ls -la app.jar
             file app.jar
           "
